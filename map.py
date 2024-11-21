@@ -254,7 +254,7 @@ def wynncraft_maxtrix(nodes: NodeArray):
     return A
 
 
-def fasttravel_matrix(nodes: NodeArray):
+def fasttravel_matrix(nodes: NodeArray, fasttravel: dict[str, float]):
     F = np.full((len(nodes),)*2, np.inf)
 
     # Ragni-Detlas Tunnel
@@ -366,7 +366,7 @@ def main():
     nodes = reduce(lambda x,y: x | y, nodes)
 
     A = wynncraft_maxtrix(nodes)
-    F = fasttravel_matrix(nodes)
+    F = fasttravel_matrix(nodes, fasttravel)
 
     _ = np.full_like(A, np.inf)
     _[F < A] = F[F < A]
