@@ -11,6 +11,52 @@ from python_tsp.exact import (
 from time import perf_counter
 
 
+class TSP_Solver:
+    """
+    Source: https://github.com/fillipe-gsm/python-tsp
+    """
+
+    def __init__(self, distance_matrix: np.ndarray,
+                 maxsize: Optional[int] = None):
+        # adding a dummy node to convert path problem to cycle problem
+        self._D = np.pad(distance_matrix, [(0,1), (0,1)],
+                         mode='constant', constant_values=0)
+        self.dist = lru_cache(maxsize)(self._dist)
+
+    def _dist(self, ni: int, N: frozenset, n0=0) -> float:
+        if not N:
+            return self._D[ni, n0]
+
+        costs = [(nj, self._D[ni,nj] + self.dist(nj, N - {nj}, n0))
+                 for nj in N]
+        nmin, min_cost = min(costs, key=lambda x: x[1])
+        self._memo[(ni, N)] = nmin
+        return min_cost
+
+    def solve(self, *, for_path=False) -> tuple[list, float]:
+        n = self._D.shape[0]
+        if for_path:
+            ni = n - 1  # start from the dummy node
+            solution = []
+        else:
+            n -= 1  # remove the dummy node
+            solution = [ni] = [0]
+
+        N = frozenset(range(0, n)) - {ni}
+        self._memo: dict[tuple, int] = {}
+
+        # Step 1: get minimum distance
+        best_distance = self.dist(ni, N, n0).item()
+
+        # Step 2: get path with the minimum distance
+        while N:
+            ni = self._memo[(ni, N)]
+            solution.append(ni)
+            N = N - {ni}
+
+        return solution, best_distance
+
+
 class NodeArray:
     def __init__(self, nodedict, name='', parts=None):
         self.name = name
@@ -62,13 +108,40 @@ class NodeArray:
         return list(self.names)
 
 
-def euclidean_distance(source, dest):
-    if source.ndim == 1:
-        source = source[None]
-    d = source[:,None,:] - dest[None,...]
-    d[d[...,1]>0, 1] = 0
-    d = np.sum(d**2, axis=-1)**0.5
-    return d
+def floyd_warshall(A, return_predecessors=False):
+    D = np.copy(A)
+    if not return_predecessors:
+        for k in range(D.shape[1]):
+            D = np.minimum(D, D[:,k][:,None] + D[k,:])
+        return D
+    P = np.tile(np.arange(A.shape[0])[:,None], (1,A.shape[0]))
+    P[np.isinf(A)] = -1
+    for k in range(D.shape[1]):
+        Dk = D[:,k][:,None] + D[k]
+        change = np.nonzero(Dk < D)
+        D[change] = Dk[change]
+        P[change] = P[k,change[1]]
+    return D, P
+
+
+def follow_predecessors(P, src, dst):
+    pre = P[src, dst].item()
+    if pre == src:
+        return [src, dst]
+    path = follow_predecessors(P, src, pre)
+    path.append(dst)
+    return path
+
+
+def expand_path(P, path):
+    expanded = [path[0]]
+    for i,j in pairwise(path):
+        expanded.extend(follow_predecessors(P, i, j)[1:])
+    return expanded
+
+
+def path_length(A, path):
+    return reduce(lambda l,e: l + A[e], pairwise(path), 0)
 
 
 def disconnect(A, /, isle1, isle2=None, *, keep=None, debug=False):
@@ -99,8 +172,43 @@ def disconnect(A, /, isle1, isle2=None, *, keep=None, debug=False):
     A[I1 & I2 & ~G] = np.inf
 
 
-def adjacency_matrix(nodes: NodeArray):
-    A = euclidean_distance(nodes.xyz, nodes.xyz)
+def subgraph(P, part):
+    paths = set()
+    edges = set()
+
+    for (i,j), p in np.ndenumerate(P[part][:,part]):
+        if p == -1:
+            continue
+        p = p.item()
+        if p != i:
+            paths.add((i,p))
+        edges.add((p,j))
+
+    while paths:
+        fix_paths = set(paths)
+        for i,j in fix_paths:
+            p = P[i,j].item()
+            if p == -1:
+                continue
+            if p != i:
+                paths.add((i,p))
+            edges.add((p,j))
+        paths = paths - fix_paths
+
+    return tuple(np.array(list(edges)).T)
+
+
+def custome_distance(source, dest):
+    if source.ndim == 1:
+        source = source[None]
+    d = source[:,None,:] - dest[None,...]
+    d[d[...,1]>0, 1] = 0
+    d = np.sum(d**2, axis=-1)**0.5
+    return d
+
+
+def wynncraft_maxtrix(nodes: NodeArray):
+    A = custome_distance(nodes.xyz, nodes.xyz)
 
     # Realm of Light
     *realm_of_light, ls \
@@ -202,114 +310,6 @@ def fasttravel_matrix(nodes: NodeArray):
     return F
 
 
-def floyd_warshall(A, return_predecessors=False):
-    D = np.copy(A)
-    if not return_predecessors:
-        for k in range(D.shape[1]):
-            D = np.minimum(D, D[:,k][:,None] + D[k,:])
-        return D
-    P = np.tile(np.arange(A.shape[0])[:,None], (1,A.shape[0]))
-    P[np.isinf(A)] = -1
-    for k in range(D.shape[1]):
-        Dk = D[:,k][:,None] + D[k]
-        change = np.nonzero(Dk < D)
-        D[change] = Dk[change]
-        P[change] = P[k,change[1]]
-    return D, P
-
-
-def follow_predecessors(P, src, dst):
-    pre = P[src, dst].item()
-    if pre == src:
-        return [src, dst]
-    path = follow_predecessors(P, src, pre)
-    path.append(dst)
-    return path
-
-
-def expand_path(P, path):
-    expanded = [path[0]]
-    for i,j in pairwise(path):
-        expanded.extend(follow_predecessors(P, i, j)[1:])
-    return expanded
-
-
-def path_length(A, path):
-    return reduce(lambda l,e: l + A[e], pairwise(path), 0)
-
-
-class TSP_Solver:
-    """
-    Source: https://github.com/fillipe-gsm/python-tsp
-    """
-
-    def __init__(self, distance_matrix: np.ndarray,
-                 maxsize: Optional[int] = None):
-        # adding a dummy node to convert path problem to cycle problem
-        self._D = np.pad(distance_matrix, [(0,1), (0,1)],
-                         mode='constant', constant_values=0)
-        self.dist = lru_cache(maxsize)(self._dist)
-
-    def _dist(self, ni: int, N: frozenset) -> float:
-        if not N:
-            return self._D[ni, 0]
-
-        costs = [(nj, self._D[ni,nj] + self.dist(nj, N - {nj}))
-                 for nj in N]
-        nmin, min_cost = min(costs, key=lambda x: x[1])
-        self._memo[(ni, N)] = nmin
-        return min_cost
-
-    def solve(self, *, for_path=False) -> tuple[list, float]:
-        n = self._D.shape[0]
-        if for_path:
-            ni = n - 1  # start from the dummy node
-            solution = []
-        else:
-            n -= 1  # remove the dummy node
-            solution = [ni] = [0]
-
-        N = frozenset(range(0, n)) - {ni}
-        self._memo: dict[tuple, int] = {}
-
-        # Step 1: get minimum distance
-        best_distance = self.dist(ni, N).item()
-
-        # Step 2: get path with the minimum distance
-        while N:
-            ni = self._memo[(ni, N)]
-            solution.append(ni)
-            N = N - {ni}
-
-        return solution, best_distance
-
-
-def prune(P, part):
-    paths = set()
-    edges = set()
-
-    for (i,j), p in np.ndenumerate(P[part][:,part]):
-        if p == -1:
-            continue
-        p = p.item()
-        if p != i:
-            paths.add((i,p))
-        edges.add((p,j))
-
-    while paths:
-        fix_paths = set(paths)
-        for i,j in fix_paths:
-            p = P[i,j].item()
-            if p == -1:
-                continue
-            if p != i:
-                paths.add((i,p))
-            edges.add((p,j))
-        paths = paths - fix_paths
-
-    return tuple(np.array(list(edges)).T)
-
-
 def plot(nodes, A, F=None):
     if F is None:
         F = np.zeros_like(A, dtype=bool)
@@ -342,8 +342,6 @@ def plot_path(nodes, path, F=None):
 
 
 def main():
-    global nodes, bps, fasttravel, caves, A, F, D, P, C
-
     with open('waypoints', 'r') as f:
         lines = f.readlines()
     lines = iter(lines)
@@ -367,7 +365,7 @@ def main():
     nodes = [NodeArray(nodes[part], name=part) for part in nodes]
     nodes = reduce(lambda x,y: x | y, nodes)
 
-    A = adjacency_matrix(nodes)
+    A = wynncraft_maxtrix(nodes)
     F = fasttravel_matrix(nodes)
 
     _ = np.full_like(A, np.inf)
@@ -380,6 +378,8 @@ def main():
     caves = nodes.parts['caves']
     C = D[caves][:,caves]
 
+    return A, F, D, P, C, nodes, bps, fasttravel, caves
+
 
 if __name__ == '__main__':
-    main()
+    A, F, D, P, C, nodes, bps, fasttravel, caves = main()
