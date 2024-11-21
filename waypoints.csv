@@ -1,0 +1,53 @@
+                      Name,     X,   Y,      Z, Cave, Town,  Scroll, Level,               Area
+              Basalt Basin,  -557,  31,   -460,    1,    0,       0,    72,      Dernel Jungle
+               Ledant Hill, -1222,  78,  -4856,    1,    0,       0,    72,   Pre-Light Forest
+             Mesquis Tower,  -785,  58,  -5036,    1,    0,       0,    72,      Kander Forest
+              Kander Crypt,  -406,  47,  -5444,    1,    0,       0,    72,      Kander Forest
+               Weird Wilds,  -967,  65,  -4353,    1,    0,       0,    72,       Light Forest
+                Flesh Mesh,  -751,  38,  -5503,    1,    0,       0,    72,      Kander Forest
+          Mystifying Stump,  -754,  53,  -5299,    1,    0,       0, 72-80,      Kander Forest
+         Raiders' Rockhill,  -111,  37,  -4621,    1,    0,       0,    73,       Gylia Plains
+          Visceral Remnant,  -997,  45,  -5559,    1,    0,       0,    74,        Dark Forest
+              Shock Shrine,  -647,  50,  -4419,    1,    0,       0,    75,            Aldorei
+     Bandit Groundbreaking,  -287,  45,  -5552,    1,    0,       0,    75,       Gylia Plains
+        Root Slingers' Rut,  -177,  34,  -4864,    1,    0,       0,    75,       Gylia Plains
+             Weirding Ring,  -498,  41,  -5293,    1,    0,       0,    75,      Kander Forest
+             Tree of Light,  -893,  54,  -6217,    1,    0,       0,    77,     Realm of Light
+               Burning Bog,  -411,  37,  -5205,    1,    0,       0, 79-85,       Gylia Plains
+             Troll Burrows,   858,  80,  -5198,    1,    0,       0,    80, Canyon of the Lost
+           Drone's Retreat,   234, 183,  -5422,    1,    0,       0,    80, Canyon of the Lost
+              Gorgon Gorge,   715,  47,  -5495,    1,    0,       0,    80, Canyon of the Lost
+                    Detlas,   462,  67,  -1572,    0,    1,       1,    10,        Wynn Plains
+                   Nemract,    98,  39,  -2191,    0,    1,       1,    20,        Wynn Plains
+                   Selchar,    92,  34,  -3063,    0,    1,       1,    25,              Ocean
+                Tempo Town,  -281,  53,  -1174,    0,    1,       1,    25,        Wynn Plains
+                     Bucie, -1476,  42,  -4725,    0,    1,       1,    40,    Llevigar Plains
+                    Nesaak,   113,  73,   -773,    0,    1,       1,    40,      Nesaak Tundra
+                  Llevigar, -1941,  36,  -4219,    0,    1,       1,    40,           Llevigar
+                     Troms,  -867,  76,   -910,    0,    1,       1,    55,       Troms Jungle
+                  Gelibord, -1023,  47,  -5307,    0,    1,       1,    60,        Dark Forest
+                    Efilim, -1091,  42,  -5025,    0,    1,       0,    70,       Light Forest
+              Aldorei Town,  -296, 103,  -4422,    0,    1,       1,    75,            Aldorei
+                   Cinfras,  -442,  47,  -4940,    0,    1,       1,    75,       Gylia Plains
+                    Thanos,   167,   6,  -5242,    0,    1,       1,    80, Canyon of the Lost
+                   Thesead,   793,  75,  -5088,    0,    1,       1,    85, Canyon of the Lost
+                     Eltom,   932, 117,  -5493,    0,    1,       1,    85, Canyon of the Lost
+                   Rodoroc,  1045,  18,  -5134,    0,    1,       1,    90,     Molten Heights
+               Jofash Dock,  1261,  35,  -4093,    0,    1,       0,    90,        Jofash Dock
+               Kandon-Beda,   737, 157,  -4371,    0,    1,       1,    95,        Sky Islands
+       Ragni-Detlas Tunnel,  -734,  66,  -1591,    0,    0,       0,     6,        Wynn Plains
+             Llevigar Gate, -1999,  35,  -4678,    0,    0,       0,    40,    Llevigar Plains
+                 Icy Vigil,  -134,  67,   -693,    0,    0,       0,    40,      Nesaak Tundra
+          The Great Bridge,  -501,  67,   -693,    0,    0,       0,    50,       Troms Jungle
+               The Passage,  -820,  94,  -1148,    0,    0,       0,    57,        Wynn Plains
+             Dernel Tunnel,  -591,  69,   -604,    0,    0,       0,    60,      Dernel Jungle
+               The Forgery,  -844, 122,  -4911,    0,    0,       1,    70,       Light Forest
+            Letvus Airbase,  -200, 103,  -4921,    0,    0,       0,    75,       Gylia Plains
+            Light's Secret, -1044,  77,  -4342,    0,    0,       0,    79,       Light Forest
+              Light Portal,  -856,  59,  -5985,    0,    0,       0,    79, The Realm of Light
+Entrance to Molten Heights,   961,  43,  -5300,    0,    0,       0,    85, Canyon of the Lost
+      Thesead-Eltom Tunnel,   860, 112,  -5040,    0,    0,       0,    88, Canyon of the Lost
+  Molten Heights Lava Lake,  1275,  45,  -5320,    0,    0,       0,    90,     Molten Heights
+             Jofash Tunnel,  1240,  48,  -4340,    0,    0,       0,    95,        Sky Islands
+           Colossus Tunnel,   633,  51,  -4370,    0,    0,       0,    95, Canyon of the Lost
+         Sky-Molten Tunnel,  1437,  47,  -5012,    0,    0,       0,    95,        Sky Islands

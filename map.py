@@ -1,8 +1,10 @@
+import csv
 import re
 import numpy as np
 from functools import reduce, lru_cache
 from itertools import pairwise
 from typing import Optional
+from collections.abc import Sequence
 import matplotlib.pyplot as plt
 import matplotlib.collections as mc
 from python_tsp.exact import (
@@ -381,5 +383,88 @@ def main():
     return A, F, D, P, C, nodes, bps, fasttravel, caves
 
 
+class Waypoints:
+    def __init__(self, *, data: Sequence = None, filename: str = None):
+        if not filename:
+            self.name = data[0]
+            self.xyz = data[1]
+            self.cave = data[2]
+            self.town = data[3]
+            self.scroll = data[4]
+            self.level = data[5]
+            self.area = data[6]
+            self._namedict = {n: i for i, n in enumerate(self.name)}
+            return
+
+        with open(filename, newline='') as file:
+            reader = csv.reader(file, skipinitialspace=True)
+            header = next(reader)
+            data = list(zip(*list(reader)))
+
+        self.name = np.array(data[0])
+        self.xyz = np.vectorize(float)(data[1:4]).T
+        self.cave = np.vectorize(int)(data[4])
+        self.town = np.vectorize(int)(data[5])
+        self.scroll = np.vectorize(int)(data[6])
+        self.level = list(map(lambda x: np.vectorize(int)(x.split('-')), data[7]))
+        # self.level = []
+        # self.level_index = []
+        # for u in data[7]:
+        #     for i,v in enumerate(u.split('-')):
+        #         self.level
+        self.area = np.array(data[8])
+        self._namedict = {n: i for i, n in enumerate(data[0])}
+
+    def __getitem__(self, key, *keys):
+        if 0 == len(keys) and not isinstance(key, str) and isinstance(key, Sequence):
+            return self[*key]
+        if isinstance(key, slice):
+            keys = key
+        elif isinstance(key, int):
+            keys = [key, *keys]
+        else:
+            keys = [self._namedict[k] for k in (key,) + keys]
+        data = [data[keys] for data in [self.name, self.xyz, self.cave,
+                                        self.town, self.scroll]]
+        data.append([self.level[key] for key in keys])
+        data.append(self.area[keys])
+        return Waypoints(data=data)
+
+    def __len__(self):
+        return len(self._namedict)
+
+    def _ipython_key_completions_(self):
+        return self.name
+
+    @staticmethod
+    def _truncate(*value, limit=None):
+        value = ' '.join(map(str, value))
+        if limit is None:
+            return value
+        if len(value) <= limit:
+            return f'{value:>{limit}}'
+        return f'{value[:limit-3]:>{limit-3}}...'
+
+    def _repr_pretty_(self, p, cycle):
+        if cycle:
+            p.text('[...]')
+            return
+        for i in range(min(20, len(self))):
+            row = self[i]
+            X, Y, Z = row.xyz[0]
+            p.text(f'{self._truncate(*row.name, limit=18)}   {X:6.0f} {Y:4.0f} '
+                   f'{Z:6.0f}   {row.cave[0]} {row.town[0]} {row.scroll[0]}   '
+                   f'{"-".join(map(str, row.level[0])):<9}   '
+                   f'{self._truncate(*row.area, limit=18)}\n')
+        if 20 < len(self):
+            p.text(f'{"...":>18}   {"...":>6} {"...":>4} {"...":>6}    ...    '
+                   f'{"...":<9}   {"...":>18}')
+
+
+def main2():
+    global waypoints
+    waypoints = Waypoints(filename='waypoints.csv')
+
+
 if __name__ == '__main__':
-    A, F, D, P, C, nodes, bps, fasttravel, caves = main()
+    pass
