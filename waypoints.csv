@@ -5,7 +5,8 @@
             Kander Crypt,  -406,  47, -5444,    1,    0,      0,    72,      Kander Forest
              Weird Wilds,  -967,  65, -4353,    1,    0,      0,    72,       Light Forest
               Flesh Mesh,  -751,  38, -5503,    1,    0,      0,    72,      Kander Forest
-        Mystifying Stump,  -754,  53, -5299,    1,    0,      0, 72-80,      Kander Forest
+        Mystifying Stump,  -754,  53, -5299,    1,    0,      0,    72,      Kander Forest
+        Mystifying Stump,  -754,  53, -5299,    1,    0,      0,    80,      Kander Forest
        Raiders' Rockhill,  -111,  37, -4621,    1,    0,      0,    73,       Gylia Plains
         Visceral Remnant,  -997,  45, -5559,    1,    0,      0,    74,        Dark Forest
             Shock Shrine,  -647,  50, -4419,    1,    0,      0,    75,            Aldorei
@@ -13,7 +14,8 @@
       Root Slingers' Rut,  -177,  34, -4864,    1,    0,      0,    75,       Gylia Plains
            Weirding Ring,  -498,  41, -5293,    1,    0,      0,    75,      Kander Forest
            Tree of Light,  -893,  54, -6217,    1,    0,      0,    77, The Realm of Light
-             Burning Bog,  -411,  37, -5205,    1,    0,      0, 79-85,       Gylia Plains
+             Burning Bog,  -411,  37, -5205,    1,    0,      0,    79,       Gylia Plains
+             Burning Bog,  -411,  37, -5205,    1,    0,      0,    85,       Gylia Plains
            Troll Burrows,   858,  80, -5198,    1,    0,      0,    80, Canyon of the Lost
          Drone's Retreat,   234, 183, -5422,    1,    0,      0,    80, Canyon of the Lost
             Gorgon Gorge,   715,  47, -5495,    1,    0,      0,    80, Canyon of the Lost
