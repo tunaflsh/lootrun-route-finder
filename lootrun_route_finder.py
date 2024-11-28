@@ -507,7 +507,7 @@ class WaypointGraph(Waypoints):
         print(f'Total distance: {distance:.0f}')
         expanded = self.expand(order)
         print(expanded)
-        print(self.name[[i for i in expanded if i < len(self) - self._S]])
+        print(self.name[[i for i in expanded if i < len(self)]])
         self.plot(expanded)
 
     def expand(self, path: list[int]) -> list[int]:
