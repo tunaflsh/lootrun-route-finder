@@ -10,7 +10,18 @@ import plotly.graph_objects as go
 
 class TSP:
     """
-    Source: https://github.com/fillipe-gsm/python-tsp
+    Inspired by https://github.com/fillipe-gsm/python-tsp
+
+    Optimization:
+        1. frozenset N is changed to an integer bitmask.
+        2. Removed costs list and only store the current best value.
+        3. Skip computing dist if D[ni,nj] is larger than current best cost.
+           (only valid for non negative distances)
+
+    Specialization:
+        1. Scrolls allows travel from any point to a set of points called towns
+           with a constant time. But there is a limit of 3 scrolls.
+        2. TODO: a scroll refills after 10 minutes.
     """
     def __init__(self, distance_matrix: np.ndarray, scrolls=0):
         # adding a dummy node to convert path problem to cycle problem
@@ -25,24 +36,24 @@ class TSP:
 
     def _dist(self, ni: int, N: int, n0: int, scrolls: int) \
             -> tuple[int, float]:
-        """
-        N - a bitmask representing a subset of nodes
-        """
-        costs = []
+        nmin, costmin = None, np.inf
         if not N:
-            costs.append((n0, self._D[ni,n0]))
-        if scrolls > 0 and ni != self._scroll_id:
-            nj = self._scroll_id
-            costs.append((nj, self._D[ni,nj]
-                          + self.dist(nj, N, n0, scrolls - 1)[1]))
+            nmin, costmin = n0, self._D[ni,n0]
+        nj = self._scroll_id
+        Dij = self._D[ni,nj]
+        if scrolls > 0 and ni != nj and Dij < costmin:
+            cost = Dij + self.dist(nj, N, n0, scrolls - 1)[1]
+            if cost < costmin:
+                nmin, costmin = nj, cost
         nj = 0
         while N >> nj:
-            if N & 1 << nj:
-                costs.append((
-                    nj, self._D[ni,nj]
-                    + self.dist(nj, N & ~(1 << nj), n0, scrolls)[1]))
+            Dij = self._D[ni,nj]
+            if N & 1 << nj and Dij < costmin:
+                cost = Dij + self.dist(nj, N & ~(1 << nj), n0, scrolls)[1]
+                if cost < costmin:
+                    nmin, costmin = nj, cost
             nj += 1
-        return min(costs, key=lambda x: x[1])
+        return nmin, costmin
 
     def solve(self, subset: Sequence | np.ndarray = None, start: int = None,
               *, loop=False) -> tuple[list, float]:
