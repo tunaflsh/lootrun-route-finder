@@ -20,6 +20,7 @@ class TSP:
 
     def set_scrolls(self, n):
         self._scrolls = n
+        # scroll dummy node
         self._scroll_id = len(self._D) - 2
 
     def _dist(self, ni: int, N: int, n0: int, scrolls: int) \
@@ -325,8 +326,30 @@ class WaypointGraph(Waypoints):
         self.enable_fast_travel()
         # self.enable_slash_kill()
         # self.enable_scrolls()
-        # background map image
-        self._map = Image.open(map_image_path)
+
+        # plot the map and waypoints
+        fig = go.Figure(layout=go.Layout(template='plotly_dark'))
+        self.img = Image.open(map_image_path)
+        fig.update_yaxes(scaleanchor='x', autorange='reversed')
+        fig.add_traces([
+            go.Scatter(mode='lines', hoverinfo='skip', showlegend=True,
+                       name=name, line=go.scatter.Line(color=color, dash=dash))
+            for name, color, dash in zip(
+                ['fly', 'fast travel', '/kill', 'scroll'],
+                ['turquoise', 'limegreen', 'crimson', 'darkorange'],
+                ['dot'] + ['solid'] * 3)
+            ])
+        fig.add_trace(go.Scatter(
+            mode='markers', text=self.name, x=self.xyz[:,0], y=self.xyz[:,2],
+            customdata=self.xyz, showlegend=False,
+            hovertemplate='%{text}<br>%{customdata[0]} '
+                          '%{customdata[1]} %{customdata[2]}'
+                          '<extra></extra>',
+            marker=go.scatter.Marker(color='orange')))
+        fig.add_layout_image(name='map', source=self.img, layer='below',
+                             xref='x', yref='y', x=-2392, y=-6607,
+                             sizex=self.img.size[0], sizey=self.img.size[1])
+        self._fig = fig
 
     @staticmethod
     def update(matrix_builder: Callable[['WaypointGraph', ...], None]) \
@@ -339,7 +362,7 @@ class WaypointGraph(Waypoints):
             # scroll teleportation
             WFKS = np.pad(WFK, (0, 1), constant_values=np.inf)
             WFKS[-1,self.scroll] = 0
-            # not setting path to scroll dummy node
+            # not setting path to 'scroll' dummy node
             # so floyd_warshall won't bridge over it
             D, P = floyd_warshall(WFKS, return_predecessors=True)
             # setting path to scroll after computing bridges
@@ -482,12 +505,12 @@ class WaypointGraph(Waypoints):
         order, distance = self.tsp.solve(subset=idx, start=start, loop=loop)
         print(f'TSP solver took {perf_counter() - t:.0f}s')
         print(f'Total distance: {distance:.0f}')
-        expanded = self.expand_path(order)
+        expanded = self.expand(order)
         print(expanded)
         print(self.name[[i for i in expanded if i < len(self) - self._S]])
         self.plot(expanded)
 
-    def expand_path(self, path: list[int]) -> list[int]:
+    def expand(self, path: list[int]) -> list[int]:
         expanded = []
         j = path[-1]
         i = -2
@@ -498,16 +521,14 @@ class WaypointGraph(Waypoints):
         expanded.append(path[i + 1])
         return expanded[::-1]
 
-    def path_length(self, path: list[int]) -> float:
+    def length(self, path: list[int]) -> float:
         return reduce(lambda l,e: l + self._D[e], pairwise(path), 0)
 
     def plot(self, path: list[int] = None):
         argmin = np.argmin(np.stack((self._W, self._F, self._K)), axis=0)
         argmin[np.isinf(self._W) & (argmin == 0)] = 4
-
         #        W   F   K   S
         lines = [[], [], [], []]
-
         xz = np.concat((self.xyz[:,[0,2]], [[np.nan] * 2]))
         if path:
             for i, j in pairwise(path):
@@ -527,41 +548,17 @@ class WaypointGraph(Waypoints):
             lines = [xz[line].T for line in lines]
         else:
             for i in range(3):
-                line = np.unique(np.sort(np.nonzero(argmin == i), axis=0), axis=1)
+                line = np.unique(np.sort(np.nonzero(argmin == i), axis=0),
+                                 axis=1)
                 line = np.concat((line, -np.ones((1, line.shape[1]), dtype=int)))
                 line = xz[line.T.flatten()]
                 lines[i] = line.T
+            lines[3] = np.empty((2, 0))
 
-        fig = go.Figure(layout=go.Layout(template='plotly_dark'))
-        for line, dash, color in zip(
-                lines,
-                ['dot'] + ['solid'] * 3,
-                ['turquoise', 'limegreen', 'crimson', 'darkorange']):
-            fig.add_trace(go.Scatter(
-                {k: v for k, v in zip('xy', line)},
-                hoverinfo='skip',
-                showlegend=False,
-                line=go.scatter.Line(color=color, dash=dash),
-                mode='lines'))
-        fig.add_trace(go.Scatter(
-            {'text': self.name,
-             'x': self.xyz[:,0],
-             'y': self.xyz[:,2]},
-            customdata=self.xyz,
-            hovertemplate='%{text}<br>'
-                          '%{customdata[0]} '
-                          '%{customdata[1]} '
-                          '%{customdata[2]}'
-                          '<extra></extra>',
-            showlegend=False,
-            marker=go.scatter.Marker(color='orange'),
-            mode='markers'))
-        fig.update_yaxes(scaleanchor='x', autorange='reversed')
-        fig.add_layout_image(
-                source=self._map, layer='below',
-                xref='x', yref='y', x=-2392, y=-6607,
-                sizex=self._map.size[0], sizey=self._map.size[1])
-        fig.show()
+        for i, line in enumerate(lines):
+            self._fig.data[i].x = line[0]
+            self._fig.data[i].y = line[1]
+        self._fig.show()
 
 
 def main():
