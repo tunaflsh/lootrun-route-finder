@@ -25,7 +25,7 @@
               Tempo Town,  -281,  53, -1174,    0,    1,      1,    25,        Wynn Plains
                    Bucie, -1476,  42, -4725,    0,    1,      1,    40,    Llevigar Plains
                   Nesaak,   113,  73,  -773,    0,    1,      1,    40,      Nesaak Tundra
-                Llevigar, -1941,  36, -4219,    0,    1,      1,    40,           Llevigar
+           Llevigar Dock, -1941,  36, -4219,    0,    1,      1,    40,              Ocean
                    Troms,  -867,  76,  -910,    0,    1,      1,    55,       Troms Jungle
                 Gelibord, -1023,  47, -5307,    0,    1,      1,    60,        Dark Forest
                   Efilim, -1091,  42, -5025,    0,    1,      0,    70,       Light Forest
@@ -39,9 +39,9 @@
                    Ragni,  -820,  66, -1580,    0,    1,      1,     1,        Wynn Plains
                     Olux, -1732,  60, -5528,    0,    1,      1,    50,         Olux Swamp
                  Ahmsord,  1012, 100, -4547,    0,    1,      1,   100,        Sky Islands
-             Jofash Dock,  1261,  35, -4093,    0,    0,      0,    90,        Jofash Dock
+             Jofash Dock,  1261,  35, -4093,    0,    0,      0,    90,              Ocean
      Ragni-Detlas Tunnel,  -734,  66, -1591,    0,    0,      0,     6,        Wynn Plains
-           Llevigar Gate, -1999,  35, -4678,    0,    0,      0,    40,    Llevigar Plains
+          Llevigar North, -1999,  35, -4678,    0,    0,      0,    40,    Llevigar Plains
                Icy Vigil,  -134,  67,  -693,    0,    0,      0,    40,      Nesaak Tundra
         The Great Bridge,  -501,  67,  -693,    0,    0,      0,    50,       Troms Jungle
              The Passage,  -820,  94, -1148,    0,    0,      0,    57,        Wynn Plains
