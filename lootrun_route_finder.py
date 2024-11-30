@@ -86,10 +86,12 @@ class TSP:
         # Step 2: get path with the minimum distance
         while N:
             ni = self.dist(ni, N, n0, scrolls)[0]
-            solution.extend(np.nonzero(duplic_subset[ni])[0].tolist())
             N &= ~(1 << ni)
             if ni == self.nscroll:
                 scrolls -= 1
+                solution.append(int(ni))
+                continue
+            solution.extend(np.nonzero(duplic_subset[ni])[0].tolist())
         if loop:
             solution.append(int(solution[0]))
 
