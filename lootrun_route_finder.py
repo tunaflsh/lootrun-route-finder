@@ -1,16 +1,18 @@
-from functools import reduce, cache
+from functools import reduce
 from itertools import pairwise
-from collections.abc import Sequence, Callable
+from collections.abc import Sequence
 from time import perf_counter
+import os
+from msgspec import msgpack
 import numpy as np
 import pandas as pd
-from PIL import Image
-import plotly.graph_objects as go
 
 
 BoolMask = Sequence[bool] | np.ndarray[bool] | bool
 IndexArray = Sequence[int] | np.ndarray[int] | int
 ArrayLike = np.ndarray | pd.DataFrame | pd.Series | Sequence
+
+encoder = msgpack.Encoder()
 
 
 class TSP:
@@ -22,28 +24,49 @@ class TSP:
         2. Removed costs list and only store the current best value.
         3. Skip computing dist if D[ni,nj] is larger than current best cost.
            (only valid for non negative distances)
+        4. Custom caching. Storing and loading from the disk.
 
     Specialization:
         1. Scrolls allows travel from any point to a set of points called towns
            with a constant time. But there is a limit of 3 scroll charges.
         2. TODO: a scroll recharges after 10 minutes.
     """
-    def __init__(self, distance_matrix: ArrayLike, scrolls=0):
-        self.dist = cache(self._dist)
+    def __init__(self, distance_matrix: ArrayLike, scrolls=0, cycle=False,
+                 cache_file: str = None):
         # scroll dummy node
         self.nscroll = len(distance_matrix) - 1
         self.scrolls = scrolls
+
+        # tsp or shortest hamiltonian path
+        self.cycle = cycle
+
+        # loading cache
+        self.memo = {}
+        self.cache_file = cache_file
+        try:
+            if cache_file:
+                t = perf_counter()
+                with open(cache_file, 'rb') as cf:
+                    self.memo = msgpack.decode(cf.read())
+                print(f'Loading cache time: {perf_counter() - t:.0f}s')
+        except OSError:
+            pass
+
         # handling duplicate nodes
         kwargs = dict(return_index=True, return_inverse=True)
         _, ix, iv = np.unique(distance_matrix[:-1,:-1], axis=0, **kwargs)
         _, ixT, ivT = np.unique(distance_matrix[:-1,:-1], axis=1, **kwargs)
         self.duplicates = (ix[iv,None] == ix[iv]) & (ixT[ivT,None] == ixT[ivT])
         self.unique_inv = np.argmax(self.duplicates, axis=1)
+
         # adding a dummy node to convert path problem to cycle problem
         self.D = np.pad(distance_matrix, (0,1), constant_values=0)
 
-    def _dist(self, ni: int, N: int, n0: int, scrolls: int) \
-            -> tuple[int, float]:
+    def dist(self, ni: int, N: int, n0: int, scrolls: int) -> tuple[int, float]:
+        try:
+            return self.memo[n0][scrolls][ni, N]
+        except KeyError:
+            pass
         nmin, costmin = None, np.inf
         if not N:
             nmin, costmin = n0, self.D[ni,n0]
@@ -60,40 +83,60 @@ class TSP:
                 if cost < costmin:
                     nmin, costmin = nj, cost
             nj += 1
+        costmin = float(costmin)
+        self.memo[n0][scrolls][ni, N] = nmin, costmin
         return nmin, costmin
 
-    def solve(self, subset: IndexArray|BoolMask = True, start: int = None,
-              *, loop=False) -> tuple[list, float]:
+    def solve(self, subset: IndexArray|BoolMask = True, start: int = None) -> tuple[list, float]:
         bool_subset = np.zeros(len(self.duplicates), dtype=bool)
         bool_subset[subset] = 1
         duplic_subset = self.duplicates & bool_subset
-        subset = self.unique_inv[subset]  # subset of unique nodes
+        subset = self.unique_inv[subset].tolist()  # subset of unique nodes
 
-        if not loop and start is None:
+        if not self.cycle and start is None:
             ni = n0 = len(self.D) - 1  # start and stop at the dummy node
             solution = []
         else:
             ni = subset[0] if start is None else int(start)
-            n0 = ni if loop else len(self.D) - 1  # stop at dummy if not loop
+            n0 = ni if self.cycle else len(self.D) - 1  # stop at dummy if not cycle
             solution = [ni]
         N = reduce(lambda a, b: a | 1 << b, subset, 0)
         N = N & ~(1 << ni) & ~(1 << len(self.D)-1)
 
         # Step 1: get minimum distance
         scrolls = self.scrolls
-        best_distance = float(self.dist(ni, N, n0, scrolls)[1])
+        if n0 not in self.memo:  # initialize memo
+            # for each scroll up to `scrolls` included
+            self.memo[n0] = [{} for _ in range(scrolls + 1)]
+        memosize = sum(map(len, self.memo[n0]))
 
-        # Step 2: get path with the minimum distance
+        t = perf_counter()
+        best_distance = self.dist(ni, N, n0, scrolls)[1]
+        print(f'TSP runtime: {perf_counter() - t:.0f}s')
+        print(f'Total distance: {best_distance:.0f}')
+
+        # saving cache
+        if memosize < sum(len(s) for s in self.memo[n0]) \
+                and self.cache_file:
+            t = perf_counter()
+            dirname = os.path.dirname(self.cache_file)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
+            with open(self.cache_file, 'wb') as cf:
+                cf.write(encoder.encode(self.memo))
+            print(f'Saving cache time: {perf_counter() - t:.0f}s')
+
+        # Step 2: reconstructing the path
         while N:
             ni = self.dist(ni, N, n0, scrolls)[0]
             N &= ~(1 << ni)
             if ni == self.nscroll:
                 scrolls -= 1
-                solution.append(int(ni))
+                solution.append(ni)
                 continue
             solution.extend(np.nonzero(duplic_subset[ni])[0].tolist())
-        if loop:
-            solution.append(int(solution[0]))
+        if self.cycle:
+            solution.append(solution[0])
 
         return solution, best_distance
 
@@ -116,30 +159,27 @@ def floyd_warshall(A: ArrayLike, return_predecessors=False):
 
 class WaypointGraph:
     """
-    WaypointGraph(waypoints: DataFrame,
-                  bps=18,
-                  fast_travel=True,
-                  slash_kill=False,
-                  teleport_scrolls=0)
-        waypoints - a DataFrame containing waypoints and their info.
-            (see waypoints.csv)
-        bps - the speed of the player in blocks per second.
-        fast_travel, slash_kill, teleport_scrolls - see below.
-
-    Properties:
+    Input parameters:
         waypoints - a copy of the waypoints DataFrame (read from waypoints.csv)
+        bps - average moving speed of the player in blocks per second
+        fast_travel - whether fast travel is allowed
+        slash_kill - whether /kill is allowed
+        scrolls - number of teleport scrolls allowed to use
+        cycle - whether the path is open or closes on itself, i.e.
+            TSP vs Shortest Hamiltonian Path
+        cache_file_format - a string formatter operating on variables:
+            bps, fast_travel, slash_kill, scrolls, cycle.
+            Example: 'bps={bps}ft={fast_travel}sk={slash_kill}sc={scrolls}cy={cycle}.msgspec'
+
+    Other parameters:
         distance_matrix - shortest path length between each two waypoints
         predecessor - the predecessor matrix to reconstruct the shortest path
         travel_type - a matrix storing the means of travel between two waypoints
-        fast_travel - whether fast travel is allowed
-        slash_kill - whether /kill is allowed
-        teleport_scrolls - number of tp scrolls allowed to use
 
     Methods:
-        enable(fast_travel: bool = None,
-               slash_kill: bool = None,
-               teleport_scrolls: bool = None)
-            - update matrices according to enabled travel means.
+        update(bps: int = None, fast_travel: bool = None, slash_kill: bool = None,
+               scrolls: bool = None, cycle: bool = None, cache_file_format: str = None)
+            - update parameters
         expand(path: list)
             - replaces each pair of points in the path with the
               shortest path between them.
@@ -147,7 +187,7 @@ class WaypointGraph:
             - returns the length of the path.
         find_route_between(subset: array[int | bool],
                            start: int = None,
-                           loop: bool = False)
+                           cycle: bool = False)
             - returns the shortest path passing through all
               waypoints in the subset in the form of DataFrame.
               The dataframe has 7 columns:
@@ -160,7 +200,7 @@ class WaypointGraph:
             - subset: an index array-like for the waypoints
               that will be passed through.
             - start: if given is the index of the starting point.
-            - loop: if True searches for the shortest cycle
+            - cycle: if True searches for the shortest cycle
               aka. traveling saleman problem.
     """
     # all distances between waypoints assume the player can fly over trees and obstables
@@ -168,11 +208,11 @@ class WaypointGraph:
     FLIGHT = 0
     FAST_TRAVEL = 1
     SLASH_KILL = 2
-    TELEPORT_SCROLL = 3
+    SCROLL = 3
     BLOCKED = 4
 
-    def __init__(self, waypoints: pd.DataFrame, bps=18,
-                 fast_travel=True, slash_kill=False, teleport_scrolls=0):
+    def __init__(self, waypoints: pd.DataFrame, bps=18, cache_file_format: str = None,
+                 fast_travel=True, slash_kill=False, scrolls=0, cycle=False):
         self.waypoints = waypoints.copy()
         self.distance_matrix = None
         self.predecessor = None  # predecessor matrix from floyd-warshall
@@ -180,6 +220,7 @@ class WaypointGraph:
 
         self._EMPTYMATRIX = np.full((len(self.waypoints),) * 2, np.inf)
         # fast travel durations
+        self.bps = bps
         self._TUNNEL = 0.1 * bps
         self._VSS = 42 * bps
         self._OBELISK = 9 * bps
@@ -191,60 +232,75 @@ class WaypointGraph:
         self._SLASH_KILL = 3 * bps
         self._SCROLL = 7 * bps
 
-        # distances between waypoints that are not blocked by mountains and barriers
+        # wynncraft map adjacency/distance matrix
         self._flight_path = self._build_map()
-        self._fast_travel = self._build_fast_travel()
-        self._slash_kill = self._build_slash_kill()
-        self._ft = fast_travel
-        self._sk = slash_kill
-        self._tp = teleport_scrolls
+        self._fast_travel = self._EMPTYMATRIX
+        self._slash_kill = self._EMPTYMATRIX
 
-        self.enable(fast_travel=self._ft,
-                    slash_kill=self._sk,
-                    teleport_scrolls=self._tp)
+        self.fast_travel = fast_travel
+        self.slash_kill = slash_kill
+        self.scrolls = scrolls
+        self.cycle = cycle
+        self.cache_file = None
 
-    def enable(self, fast_travel: bool = None, slash_kill: bool = None,
-               teleport_scrolls: int = None):
+        self.update(bps=bps, fast_travel=fast_travel, slash_kill=slash_kill,
+                    scrolls=scrolls, cycle=cycle, cache_file_format=cache_file_format)
+
+    def update(self, bps: int = None, fast_travel: bool = None, slash_kill: bool = None,
+               scrolls: int = None, cycle: bool = None, cache_file_format: str = None):
+        should_update_fast_travel = False
+        should_update_slash_kill = False
+
+        if bps is not None:
+            self.bps = bps
+            should_update_fast_travel = True
+            should_update_slash_kill = True
         if fast_travel is not None:
-            self._ft = fast_travel
+            self.fast_travel = fast_travel
+            should_update_fast_travel = True
         if slash_kill is not None:
-            self._sk = slash_kill
-        if teleport_scrolls is not None:
-            self._tp = teleport_scrolls
-        # choose minimum between map matrix, fast travel matrix, /kill matrix
-        D = np.stack([self._flight_path,
-            self._fast_travel if self._ft else self._EMPTYMATRIX,
-            self._slash_kill if self._sk else self._EMPTYMATRIX])
-        A = np.argmin(D, axis=0)
-        D = np.take_along_axis(D, A[None], axis=0)[0]  # == np.min(D, axis=0)
-        A[np.isinf(self._flight_path) & (A == 0)] = self.BLOCKED
-        # add teleport scroll dummy node
-        D = np.pad(D, (0, 1), constant_values=np.inf)
-        A = np.pad(A, (0, 1), constant_values=self.BLOCKED)
-        D[-1,*np.ix_(self.waypoints['Scroll'] == 1)] = 0
-        A[-1,*np.ix_(self.waypoints['Scroll'] == 1)] = self.TELEPORT_SCROLL
-        # not connecting other points to scroll dummy node
-        # so floyd-warshall won't bridge over it
-        D, P = floyd_warshall(D, return_predecessors=True)
-        # adding edges to scroll node after computing bridges
-        D[:-1,-1] = self._SCROLL
-        P[:-1,-1] = np.arange(len(P) - 1)
-        self.distance_matrix = D
-        self.predecessor = P
-        self.travel_type = A
-        self.tsp = TSP(D, scrolls=self._tp)
+            self.slash_kill = slash_kill
+            should_update_slash_kill = True
+        if scrolls is not None:
+            self.scrolls = scrolls
+        if cycle is not None:
+            self.cycle = cycle
+        if cache_file_format is not None:
+            self.cache_file = cache_file_format.format(
+                bps=bps,
+                fast_travel=int(fast_travel),
+                slash_kill=int(slash_kill),
+                scrolls=scrolls,
+                cycle=int(cycle))
 
-    @property
-    def fast_travel(self):
-        return self._ft
+        if should_update_fast_travel:
+            self._fast_travel = self._build_fast_travel()
+        if should_update_slash_kill:
+            self._slash_kill = self._build_slash_kill()
 
-    @property
-    def slash_kill(self):
-        return self._sk
+        if should_update_fast_travel | should_update_slash_kill:
+            # choose minimum between map matrix, fast travel matrix, /kill matrix
+            D = np.stack([self._flight_path, self._fast_travel, self._slash_kill])
+            A = np.argmin(D, axis=0)
+            D = np.take_along_axis(D, A[None], axis=0)[0]  # == np.min(D, axis=0)
+            A[np.isinf(self._flight_path) & (A == 0)] = self.BLOCKED
+            # add teleport scroll dummy node
+            D = np.pad(D, (0, 1), constant_values=np.inf)
+            A = np.pad(A, (0, 1), constant_values=self.BLOCKED)
+            D[-1,*np.ix_(self.waypoints['Scroll'] == 1)] = 0
+            A[-1,*np.ix_(self.waypoints['Scroll'] == 1)] = self.SCROLL
+            # not connecting other points to scroll dummy node
+            # so floyd-warshall won't bridge over it
+            D, P = floyd_warshall(D, return_predecessors=True)
+            # adding edges to scroll node after computing bridges
+            D[:-1,-1] = self._SCROLL
+            P[:-1,-1] = np.arange(len(P) - 1)
+            self.distance_matrix = D
+            self.predecessor = P
+            self.travel_type = A
 
-    @property
-    def teleport_scrolls(self):
-        return self._tp
+        self.tsp = TSP(self.distance_matrix, scrolls=self.scrolls,
+                       cycle=self.cycle, cache_file=self.cache_file)
 
     @staticmethod
     def _distance_metric(src: ArrayLike, dst: ArrayLike) -> np.ndarray:
@@ -363,41 +419,40 @@ class WaypointGraph:
         slash_kill[inside_region, closest_town] = self._SLASH_KILL
         return slash_kill
 
-    def find_route_between(self, subset: IndexArray|BoolMask, start: int = None,
-                           *, loop=False) -> pd.DataFrame:
-        t = perf_counter()
-        order, distance = self.tsp.solve(subset, start, loop=loop)
-        expanded = self.expand(order)
-        print(f'TSP solver took {perf_counter() - t:.0f}s')
-        print(f'Total distance: {distance:.0f}')
-
-        expanded_df = []
-        for prev_waypoint, waypoint in pairwise([expanded[0]] + expanded):
+    def find_route_between(self, subset: IndexArray|BoolMask, start: int = None) -> pd.DataFrame:
+        order, distance = self.tsp.solve(subset, start)
+        order = self.expand(order)
+        order_df = []
+        for prev_waypoint, waypoint in pairwise([order[0]] + order):
             travel_type = self.travel_type[prev_waypoint, waypoint]
             if self.BLOCKED == travel_type:
                 continue
 
             waypoint_df = self.waypoints.loc[[waypoint]]
-            waypoint_df['Info'] = np.where(waypoint_df['Town'], 'Town',
-                                  np.where(waypoint_df['Cave'], 'Cave', ''))
+            info = ['Town'] if waypoint_df['Town'].item() else \
+                   ['Cave'] if waypoint_df['Cave'].item() else []
 
-            if self.TELEPORT_SCROLL == travel_type:
+            if self.SCROLL == travel_type:
                 assert self.waypoints.loc[waypoint, 'Scroll'] == 1, \
                         f'{self.waypoints.loc[waypoint, "Name"]} ' \
                         f'doesn\'t have a teleport scroll'
-                waypoint_df['Travel'] = 'teleport scroll'
+                waypoint_df['Travel'] = self.SCROLL
+                waypoint_df['Info'] = ', '.join([*info, 'tp scroll'])
             elif self.SLASH_KILL == travel_type:
-                waypoint_df['Travel'] = '/kill'
+                waypoint_df['Travel'] = self.SLASH_KILL
+                waypoint_df['Info'] = ', '.join([*info, '/kill'])
             elif self.FAST_TRAVEL == travel_type:
-                waypoint_df['Travel'] = 'fast travel'
+                waypoint_df['Travel'] = self.FAST_TRAVEL
+                waypoint_df['Info'] = ', '.join([*info, 'fast travel'])
             elif self.FLIGHT == travel_type:
-                waypoint_df['Travel'] = ''
+                waypoint_df['Travel'] = self.FLIGHT
+                waypoint_df['Info'] = ', '.join([*info])
 
-            expanded_df.append(waypoint_df)
+            order_df.append(waypoint_df)
 
-        expanded_df = pd.concat(expanded_df, copy=False, ignore_index=True)
-        expanded_df = expanded_df['Name Travel X Y Z Level Info'.split()]
-        return expanded_df
+        order_df = pd.concat(order_df, copy=False, ignore_index=True)
+        order_df = order_df['Name Travel X Y Z Level Info'.split()]
+        return order_df, distance
 
     def expand(self, path: list[int]) -> list[int]:
         expanded = []
@@ -417,10 +472,14 @@ class WaypointGraph:
 def main():
     global wp, wg, caves72_80
     wp = pd.read_csv('waypoints.csv', skipinitialspace=True)
-    wg = WaypointGraph(wp, bps=18,
-                       fast_travel=True,
-                       slash_kill=True,
-                       teleport_scrolls=0)
+    bps = 18
+    ft = True
+    sk = True
+    sc = 3
+    cy = False
+    cf = '.cache/bps{bps}ft{fast_travel}sk{slash_kill}sc{scrolls}cy{cycle}.msgspec'
+    wg = WaypointGraph(wp, bps=bps, fast_travel=ft, slash_kill=sk,
+                       scrolls=sc, cycle=cy, cache_file_format=cf)
     # find shortest route between caves from levels 72 to 80
     caves72_80 = (72 <= wp.Level) & (wp.Level <= 80) & (wp.Cave == 1)
     # wg.find_route_between(caves72_80)
