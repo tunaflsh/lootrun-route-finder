@@ -36,6 +36,7 @@ class TSP:
         # scroll dummy node
         self.nscroll = len(distance_matrix) - 1
         self.scrolls = scrolls
+        assert scrolls <= 3, f'Scroll capacity in Wynncraft is 3, but {scrolls=}'
 
         # tsp or shortest hamiltonian path
         self.cycle = cycle
@@ -49,7 +50,7 @@ class TSP:
                 with open(cache_file, 'rb') as cf:
                     self.memo = msgpack.decode(cf.read())
                 print(f'Loading cache time: {perf_counter() - t:.0f}s')
-        except OSError:
+        except FileNotFoundError:
             pass
 
         # handling duplicate nodes
@@ -107,7 +108,7 @@ class TSP:
         scrolls = self.scrolls
         if n0 not in self.memo:  # initialize memo
             # for each scroll up to `scrolls` included
-            self.memo[n0] = [{} for _ in range(scrolls + 1)]
+            self.memo[n0] = [{} for _ in range(3 + 1)]
         memosize = sum(map(len, self.memo[n0]))
 
         t = perf_counter()
@@ -168,8 +169,10 @@ class WaypointGraph:
         cycle - whether the path is open or closes on itself, i.e.
             TSP vs Shortest Hamiltonian Path
         cache_file_format - a string formatter operating on variables:
-            bps, fast_travel, slash_kill, scrolls, cycle.
-            Example: 'bps={bps}ft={fast_travel}sk={slash_kill}sc={scrolls}cy={cycle}.msgspec'
+            bps, fast_travel, slash_kill, cycle.
+            Example: 'bps={bps}ft={fast_travel}sk={slash_kill}cy={cycle}.msgspec'
+            Note: `scrolls` is not used since different scroll number will
+                  still have the same memo cache.
 
     Other parameters:
         distance_matrix - shortest path length between each two waypoints
@@ -270,7 +273,6 @@ class WaypointGraph:
                 bps=bps,
                 fast_travel=int(fast_travel),
                 slash_kill=int(slash_kill),
-                scrolls=scrolls,
                 cycle=int(cycle))
 
         if should_update_fast_travel:
@@ -471,7 +473,7 @@ class WaypointGraph:
 
 def main():
     global wp, wg, caves72_80
-    wp = pd.read_csv('waypoints.csv', skipinitialspace=True)
+    wp = pd.read_csv('assets/waypoints.csv', skipinitialspace=True)
     bps = 18
     ft = True
     sk = True
@@ -482,9 +484,9 @@ def main():
                        scrolls=sc, cycle=cy, cache_file_format=cf)
     # find shortest route between caves from levels 72 to 80
     caves72_80 = (72 <= wp.Level) & (wp.Level <= 80) & (wp.Cave == 1)
-    # wg.find_route_between(caves72_80)
-    # takes about 60s
-    # expected total distance 6405
+    # print(wg.find_route_between(caves72_80))
+    # takes about 250s
+    # expected total distance 4958
 
 
 if __name__ == '__main__':
