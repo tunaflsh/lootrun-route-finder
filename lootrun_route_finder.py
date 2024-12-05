@@ -1,3 +1,4 @@
+from datetime import timedelta
 from functools import reduce
 from itertools import pairwise
 from collections.abc import Sequence
@@ -44,14 +45,6 @@ class TSP:
         # loading cache
         self.memo = {}
         self.cache_file = cache_file
-        try:
-            if cache_file:
-                t = perf_counter()
-                with open(cache_file, 'rb') as cf:
-                    self.memo = msgpack.decode(cf.read())
-                print(f'Loading cache time: {perf_counter() - t:.0f}s')
-        except FileNotFoundError:
-            pass
 
         # handling duplicate nodes
         kwargs = dict(return_index=True, return_inverse=True)
@@ -104,13 +97,22 @@ class TSP:
         N = reduce(lambda a, b: a | 1 << b, subset, 0)
         N = N & ~(1 << ni) & ~(1 << len(self.D)-1)
 
-        # Step 1: get minimum distance
+        # Step 0: initialize memo
+        if not self.memo and self.cache_file:
+            try:
+                t = perf_counter()
+                with open(self.cache_file, 'rb') as cf:
+                    self.memo = msgpack.decode(cf.read())
+                print(f'Loading cache time: {perf_counter() - t:.0f}s')
+            except FileNotFoundError:
+                pass
         scrolls = self.scrolls
-        if n0 not in self.memo:  # initialize memo
+        if n0 not in self.memo:
             # for each scroll up to `scrolls` included
             self.memo[n0] = [{} for _ in range(3 + 1)]
         memosize = sum(map(len, self.memo[n0]))
 
+        # Step 1: get minimum distance
         t = perf_counter()
         best_distance = self.dist(ni, N, n0, scrolls)[1]
         print(f'TSP runtime: {perf_counter() - t:.0f}s')
@@ -168,7 +170,7 @@ class WaypointGraph:
         scrolls - number of teleport scrolls allowed to use
         cycle - whether the path is open or closes on itself, i.e.
             TSP vs Shortest Hamiltonian Path
-        cache_file_format - a string formatter operating on variables:
+        cache_file_template - a string formatter operating on variables:
             bps, fast_travel, slash_kill, cycle.
             Example: 'bps={bps}ft={fast_travel}sk={slash_kill}cy={cycle}.msgspec'
             Note: `scrolls` is not used since different scroll number will
@@ -181,7 +183,7 @@ class WaypointGraph:
 
     Methods:
         update(bps: int = None, fast_travel: bool = None, slash_kill: bool = None,
-               scrolls: bool = None, cycle: bool = None, cache_file_format: str = None)
+               scrolls: bool = None, cycle: bool = None, cache_file_template: str = None)
             - update parameters
         expand(path: list)
             - replaces each pair of points in the path with the
@@ -214,12 +216,13 @@ class WaypointGraph:
     SCROLL = 3
     BLOCKED = 4
 
-    def __init__(self, waypoints: pd.DataFrame, bps=18, cache_file_format: str = None,
+    def __init__(self, waypoints: pd.DataFrame, bps=18, cache_file_template: str = None,
                  fast_travel=True, slash_kill=False, scrolls=0, cycle=False):
         self.waypoints = waypoints.copy()
         self.distance_matrix = None
         self.predecessor = None  # predecessor matrix from floyd-warshall
         self.travel_type = None
+        self.tsp = None  # tsp solver
 
         self._EMPTYMATRIX = np.full((len(self.waypoints),) * 2, np.inf)
         # fast travel durations
@@ -240,45 +243,71 @@ class WaypointGraph:
         self._fast_travel = self._EMPTYMATRIX
         self._slash_kill = self._EMPTYMATRIX
 
-        self.fast_travel = fast_travel
-        self.slash_kill = slash_kill
-        self.scrolls = scrolls
-        self.cycle = cycle
-        self.cache_file = None
+        self.fast_travel = None
+        self.slash_kill = None
+        self.scrolls = None
+        self.cycle = None
+        self.cache_file_template = None
 
         self.update(bps=bps, fast_travel=fast_travel, slash_kill=slash_kill,
-                    scrolls=scrolls, cycle=cycle, cache_file_format=cache_file_format)
+                    scrolls=scrolls, cycle=cycle,
+                    cache_file_template=cache_file_template)
 
     def update(self, bps: int = None, fast_travel: bool = None, slash_kill: bool = None,
-               scrolls: int = None, cycle: bool = None, cache_file_format: str = None):
+               scrolls: int = None, cycle: bool = None, cache_file_template: str = None):
         should_update_fast_travel = False
         should_update_slash_kill = False
+        should_update_tsp = False
 
-        if bps is not None:
+        if bps is not None \
+                and bps != self.bps \
+                or self.bps is None:
             self.bps = bps
             should_update_fast_travel = True
             should_update_slash_kill = True
-        if fast_travel is not None:
+            should_update_tsp = True
+        if fast_travel is not None \
+                and fast_travel != self.fast_travel \
+                or self.fast_travel is None:
             self.fast_travel = fast_travel
             should_update_fast_travel = True
-        if slash_kill is not None:
+            should_update_tsp = True
+        if slash_kill is not None \
+                and slash_kill != self.slash_kill \
+                or self.slash_kill is None:
             self.slash_kill = slash_kill
             should_update_slash_kill = True
-        if scrolls is not None:
+            should_update_tsp = True
+        if scrolls is not None \
+                and scrolls != self.scrolls \
+                or self.scrolls is None:
             self.scrolls = scrolls
-        if cycle is not None:
+            should_update_tsp = True
+        if cycle is not None \
+                and cycle != self.cycle \
+                or self.cycle is None:
             self.cycle = cycle
-        if cache_file_format is not None:
-            self.cache_file = cache_file_format.format(
-                bps=bps,
-                fast_travel=int(fast_travel),
-                slash_kill=int(slash_kill),
-                cycle=int(cycle))
+            should_update_tsp = True
+        if cache_file_template is not None \
+                and cache_file_template != self.cache_file_template \
+                or self.cache_file_template is None:
+            self.cache_file_template = cache_file_template
+            should_update_tsp = True
 
         if should_update_fast_travel:
-            self._fast_travel = self._build_fast_travel()
+            self._fast_travel = self._build_fast_travel() if self.fast_travel \
+                                else self._EMPTYMATRIX
         if should_update_slash_kill:
-            self._slash_kill = self._build_slash_kill()
+            self._slash_kill = self._build_slash_kill() if self.slash_kill \
+                               else self._EMPTYMATRIX
+
+        cache_file = None
+        if self.cache_file_template:
+            cache_file = self.cache_file_template.format(
+                bps=self.bps,
+                fast_travel=int(self.fast_travel),
+                slash_kill=int(self.slash_kill),
+                cycle=int(self.cycle))
 
         if should_update_fast_travel | should_update_slash_kill:
             # choose minimum between map matrix, fast travel matrix, /kill matrix
@@ -301,8 +330,9 @@ class WaypointGraph:
             self.predecessor = P
             self.travel_type = A
 
-        self.tsp = TSP(self.distance_matrix, scrolls=self.scrolls,
-                       cycle=self.cycle, cache_file=self.cache_file)
+        if should_update_tsp:
+            self.tsp = TSP(self.distance_matrix, scrolls=self.scrolls,
+                           cycle=self.cycle, cache_file=cache_file)
 
     @staticmethod
     def _distance_metric(src: ArrayLike, dst: ArrayLike) -> np.ndarray:
@@ -423,6 +453,8 @@ class WaypointGraph:
 
     def find_route_between(self, subset: IndexArray|BoolMask, start: int = None) -> pd.DataFrame:
         order, distance = self.tsp.solve(subset, start)
+        duration = distance // self.bps
+        print('Travel duration: {:.0f}m{:.0f}s'.format(*divmod(duration, 60)))
         order = self.expand(order)
         order_df = []
         for prev_waypoint, waypoint in pairwise([order[0]] + order):
@@ -452,7 +484,7 @@ class WaypointGraph:
 
             order_df.append(waypoint_df)
 
-        order_df = pd.concat(order_df, copy=False, ignore_index=True)
+        order_df = pd.concat(order_df, copy=False)
         order_df = order_df['Name Travel X Y Z Level Info'.split()]
         return order_df, distance
 
@@ -479,9 +511,9 @@ def main():
     sk = True
     sc = 3
     cy = False
-    cf = '.cache/bps{bps}ft{fast_travel}sk{slash_kill}sc{scrolls}cy{cycle}.msgspec'
+    cf = '.cache/bps{bps}ft{fast_travel}sk{slash_kill}cy{cycle}.msgspec'
     wg = WaypointGraph(wp, bps=bps, fast_travel=ft, slash_kill=sk,
-                       scrolls=sc, cycle=cy, cache_file_format=cf)
+                       scrolls=sc, cycle=cy, cache_file_template=cf)
     # find shortest route between caves from levels 72 to 80
     caves72_80 = (72 <= wp.Level) & (wp.Level <= 80) & (wp.Cave == 1)
     # print(wg.find_route_between(caves72_80))
