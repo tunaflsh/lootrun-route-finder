@@ -280,4 +280,4 @@ t = perf_counter()
 
 
 if __name__ == '__main__':
-    app.run(debug=True, jupyter_mode='external')
+    app.run(debug=False, jupyter_mode='external')
