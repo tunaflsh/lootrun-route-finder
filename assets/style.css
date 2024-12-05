@@ -1,0 +1,14 @@
+.wynncraft-map {
+    height: 99vh;
+}
+
+.table-wrapper {
+    overflow: hidden auto;
+    position: relative;
+    max-height: 87vh;
+}
+
+.table-wrapper > table > thead {
+    position: sticky;
+    top: 0;
+}
