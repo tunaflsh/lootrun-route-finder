@@ -1,0 +1,180 @@
+                      Name,Type,    X,  Y,    Z,              Region,Level,Length
+      Corrupted Passageway,Cave, -497, 67,-1629,       Emerald Trail,    9,    80
+          Hex Keep Gateway,Cave, -433, 66,-1691,       Emerald Trail,    7,    90
+          Hex Keep Gateway,Cave, -433, 66,-1691,       Emerald Trail,   20,    90
+              Grook's Nest,Cave,-1300, 50,-1569,     Ragni Outskirts,    1,    20
+           Pigman Barbeque,Cave, -622, 69,-1570,       Emerald Trail,    1,    30
+           Ancestor Grotto,Cave, -628, 48,-1953,       Maltic Plains,    2,    20
+       Spider Mother Grove,Cave, -312, 78,-1553,         Nivla Woods,    4,    30
+          Tidepool Terrace,Cave, -512, 35,-2015,       Coastal Trail,    4,    60
+                Fungas Log,Cave, -142, 74,-1679,         Nivla Woods,    5,    40
+             Derelict Mine,Cave, -627, 69,-1760,       Maltic Plains,    6,    40
+          Crypt Excavation,Cave,  -32, 69,-1432,         Nivla Woods,    6,    80
+             Crab Fighters,Cave, -799, 37,-1965,       Coastal Trail,    6,    60
+      Roots of Infestation,Cave, -209, 70,-1570,         Nivla Woods,    7,    40
+            Old Growth Rot,Cave, -265, 71,-1529,         Nivla Woods,    7,    30
+          Fire &amp; Water,Cave, -502, 71,-1722,       Emerald Trail,    7,    50
+          Detlas Salt Mine,Cave,   21, 63,-1767,      Detlas Suburbs,   10,    80
+                Hill Hovel,Cave,  241, 70,-1559,      Detlas Suburbs,   11,    60
+        Winery Infestation,Cave,  282, 70,-1392,      Detlas Suburbs,   11,    70
+              Spore Spiral,Cave,  670, 71,-1617,          Black Road,   12,    80
+              Raging Tower,Cave,  144, 68,-1680,      Detlas Suburbs,   10,    70
+              Mossy Grotto,Cave, -449, 67,-1394,         Time Valley,   16,    60
+              Willow Crypt,Cave,  591, 81,-1866,            Savannah,   16,    60
+              Cave Springs,Cave,  310, 59,-1851,       Nemract Swamp,   17,    60
+               Pirate Hold,Cave,  489, 39,-2067,        Pirate's Bay,   18,    80
+               Sunken Ship,Cave,  215, 34,-2410,    Underwater Route,   18,   120
+        Captain's Quarters,Cave,  561, 38,-2085,        Pirate's Bay,   19,    80
+            Lovers' Cavern,Cave,  394, 44,-1990,       Nemract Swamp,   20,    50
+              Muddy Cavern,Cave,  108, 50,-1924,       Nemract Swamp,   20,    50
+     Lower Abandoned Mines,Cave,  769, 27,-1280,     Abandoned Mines,   22,    60
+         Corrupt Time Warp,Cave, -332, 68,-1301,         Time Valley,   22,   120
+     The Sacrificial Altar,Cave, -298, 38, -969,         Time Valley,   22,    90
+            Vortex Complex,Cave, -182, 71,-1210,         Time Valley,   22,   180
+               Boar Burrow,Cave, -227, 56,-2097,          Mount Wynn,   23,    70
+                  Lake Pit,Cave,  477, 68,-1226,    Corrupted Plains,   24,    80
+            Termite Mounds,Cave,  727, 76,-1707,            Savannah,   24,   180
+       Time Valley Aquifer,Cave, -337, 74,-1167,         Time Valley,   26,    70
+               The Alcazar,Cave, -499, 76,-1024,         Time Valley,   27,   180
+               Lush Grotto,Cave,  719, 36,-2853,               Ocean,   28,    60
+          Corruption Mines,Cave,  170, 70,-1187, Roots of Corruption,   28,    70
+             Treasure Tomb,Cave, 1030, 68,-2169,        Almuj Desert,   30,    60
+               Troll Tower,Cave, 1106, 85,-2870,               Ocean,   30,   120
+                 Dust Bowl,Cave, 1003, 73,-1704,        Almuj Desert,   30,    60
+           Crystal Caverns,Cave, 1120, 75,-2177,        Almuj Desert,   30,   120
+               Lion's Lair,Cave,  768, 93,-2211,            Savannah,   30,   240
+             Blazing Oasis,Cave,  924, 75,-1348,     Abandoned Mines,   30,    70
+          Wave Cult Temple,Cave, -251, 36,-2725,               Ocean,   32,    60
+            Fallen Passage,Cave, 1301, 86,-2144,        Almuj Desert,   32,    50
+    Quicksand Carvers' Den,Cave,  974, 64,-2109,        Almuj Desert,   34,    70
+      Shadow Spears Refuge,Cave, 1339, 33,-1552,        Almuj Desert,   35,    70
+    Emerald Knives Hideout,Cave, 1338, 79,-1705,        Almuj Desert,   35,    70
+           Sundial Sanctum,Cave, 1062, 73,-1726,        Almuj Desert,   35,   900
+          Half Moon Island,Cave, 1085, 37,-2566,               Ocean,   37,   300
+               Gator Range,Cave, 1306, 31,-1452,          Rymek Mesa,   37,    90
+                 Gold Rush,Cave,  924, 75,-1348,          Rymek Mesa,   38,    60
+       Crystalline Polynya,Cave, 1203, 36,-2937,               Ocean,   39,    60
+                 Ice Doors,Cave, -118, 70, -923,       Nesaak Tundra,   41,   120
+                  Wolf Den,Cave,  175, 72, -715,       Nesaak Tundra,   43,    70
+          Raiders' Hideout,Cave, -252, 34, -291,          Ice Canyon,   44,   120
+         Holehold Orc Camp,Cave,-1767, 48,-4778,     Llevigar Plains,   45,    60
+       Shineridge Orc Camp,Cave,-1621, 47,-4664,     Llevigar Plains,   45,   180
+       Submerged Coal Mine,Cave, -120, 30, -294,          Ice Canyon,   45,    80
+           Raging Survivor,Cave, -287, 26, -555,          Ice Canyon,   45,    70
+           Headless Hollow,Cave,  -22, 76, -297,          Twain Lake,   45,    70
+                  Orc Cove,Cave,-1827, 53,-4899,     Llevigar Plains,   46,    40
+                  Sol Hive,Cave,-2203, 93,-4929,     Llevigar Plains,   46,    50
+              Breaking Ice,Cave, -134, 73, -797,       Nesaak Tundra,   46,    80
+               Secret Mine,Cave,-1490, 48,-4990,     Llevigar Plains,   46,    50
+                Swamp Hill,Cave,-2059, 58,-5241,          Olux Swamp,   50,    40
+                 Frog Hole,Cave,-1756, 57,-5133,          Olux Swamp,   50,    70
+            Trunk Garrison,Cave, -560, 79, -959,        Troms Jungle,   51,    60
+             Maddening Mud,Cave,-1544, 48,-5337,          Olux Swamp,   53,    60
+             Carnadile Den,Cave, -725, 46, -798,        Troms Jungle,   53,    60
+         Thunder Grub Nest,Cave, -618, 62, -728,        Troms Jungle,   53,    60
+            Jungle Horrors,Cave, -609,108, -579,        Troms Jungle,   54,    50
+              Rotten Altar,Cave, -570, 68, -612,        Troms Jungle,   54,    60
+          Lily Pad Parkour,Cave,-1834, 57,-5172,          Olux Swamp,   55,    70
+                 Sink Hole,Cave,-1512, 50,-5246,          Olux Swamp,   55,    90
+      Skien's Prison Block,Cave,  405,  9,-3468,       Skiens Island,   55,   120
+               Sewer Herps,Cave,-1983, 65,-5234,          Olux Swamp,   57,   120
+                Fire Swamp,Cave,-2098, 59,-6117,          Olux Swamp,   57,   140
+              Volcanus Pit,Cave, -830, 40,-3794,      Volcanic Isles,   58,    60
+               Naga Dugout,Cave,-2025, 59,-5081,          Olux Swamp,   58,   120
+         Subterranean Mire,Cave, -809, 23, -448,       Dernel Jungle,   60,    40
+                 Jade Well,Cave, -799, 43, -608,       Dernel Jungle,   60,    60
+            Bird Sanctuary,Cave, -928, 30, -610,       Dernel Jungle,   60,    90
+          Cultists Passage,Cave,-1261, 45,-4460,    Pre-Light Forest,   63,    60
+        Fortress Catacombs,Cave,-1336, 45,-5079,         Dark Forest,   64,    70
+        Jungle Fetish Camp,Cave, -698, 33, -607,       Dernel Jungle,   64,    90
+          Dullahan Gardens,Cave,-1132, 82,-5684,         Dark Forest,   65,   140
+          Elemental Hollow,Cave,-1110, 47,-5290,         Dark Forest,   66,    90
+          Jungle Labyrinth,Cave, -667, 59, -926,        Troms Jungle,   66,   150
+              Earth Eaters,Cave,-1388, 45,-4981,    Pre-Light Forest,   68,    80
+           Temple Entrance,Cave, -675, 32, -306,       Dernel Jungle,   68,    80
+              Nymph Towers,Cave,-1052, 46,-4768,        Light Forest,   69,   105
+             The Heartwood,Cave, -625, 66, -289,       Dernel Jungle,   69,    60
+              Recluse Nest,Cave, -755, 46,-4830,        Light Forest,   70,   120
+     Shroom Sleeper Dugout,Cave, -551, 45,-4689,        Light Forest,   71,    80
+            Fallen Salient,Cave, -956, 43, -525,       Dernel Jungle,   71,   150
+            Bovine Bedrock,Cave, -608, 48,-4904,     Cinfras Suburbs,   71,   105
+              Basalt Basin,Cave, -557, 31, -460,       Dernel Jungle,   72,    90
+               Ledant Hill,Cave,-1222, 78,-4856,    Pre-Light Forest,   72,    90
+             Mesquis Tower,Cave, -785, 58,-5036,       Kander Forest,   72,    90
+              Kander Crypt,Cave, -406, 47,-5444,       Kander Forest,   72,   140
+               Weird Wilds,Cave, -967, 65,-4353,        Light Forest,   72,   120
+          Mystifying Stump,Cave, -754, 53,-5299,       Kander Forest,   72,   180
+          Mystifying Stump,Cave, -754, 53,-5299,       Kander Forest,   80,   180
+                Flesh Mesh,Cave, -751, 38,-5503,       Kander Forest,   72,    70
+         Raiders' Rockhill,Cave, -111, 37,-4621,      Cinfras County,   73,    60
+          Visceral Remnant,Cave, -997, 45,-5559,         Dark Forest,   74,   120
+              Shock Shrine,Cave, -647, 50,-4419,      Aldorei Valley,   75,    60
+     Bandit Groundbreaking,Cave, -287, 45,-5552,      Cinfras County,   75,    80
+        Root Slingers' Rut,Cave, -177, 34,-4864,      Cinfras County,   75,    60
+             Weirding Ring,Cave, -498, 41,-5293,       Kander Forest,   75,   120
+             Tree of Light,Cave, -893, 54,-6217,      Realm of Light,   77,   110
+               Burning Bog,Cave, -411, 37,-5205,     Cinfras Suburbs,   79,   150
+               Burning Bog,Cave, -411, 37,-5205,     Cinfras Suburbs,   85,   150
+             Troll Burrows,Cave,  858, 80,-5198,  Canyon of the Lost,   80,    50
+           Drone's Retreat,Cave,  234,183,-5422,  Canyon of the Lost,   80,    75
+              Gorgon Gorge,Cave,  715, 47,-5495,  Canyon of the Lost,   80,    80
+              Voltaic Crag,Cave,  630, 44,-4945,  Canyon of the Lost,   81,    60
+       Cave of the Seasons,Cave, -864, 51,-6131,      Realm of Light,   82,   300
+       Cave of the Seasons,Cave, -864, 51,-6131,      Realm of Light,   95,   300
+      Cyclonic Spirit Trap,Cave,  600, 38,-5266,  Canyon of the Lost,   83,    75
+         Deserter's Refuge,Cave,  499, 79,-5299,  Canyon of the Lost,   85,    65
+         Seismic Bore Hole,Cave,  635, 54,-4716,  Canyon of the Lost,   85,    60
+            Guardians Cove,Cave,  129, 45,-5565,  Canyon of the Lost,   85,    60
+               Rocky Peril,Cave,  330, 67,-4916,  Canyon of the Lost,   85,    50
+          Watery Waterfall,Cave,  536, 30,-5363,  Canyon of the Lost,   85,    90
+    Broodmother's Bestiary,Cave,  645, 91,-5328,  Canyon of the Lost,   85,   110
+          Demolition Derby,Cave,  590, 29,-4625,  Canyon of the Lost,   85,    90
+             Blaze Springs,Cave,  830, 45,-5350,  Canyon of the Lost,   85,    90
+             Abyssal Shine,Cave,  605, 27,-5072,  Canyon of the Lost,   87,    80
+             Burning Delve,Cave,  346, 34,-4606,  Canyon of the Lost,   87,    75
+          Cyclopes' Shrine,Cave,   51, 46,-4456,  Canyon of the Lost,   88,    55
+     Runaway Fleris Cranny,Cave,  323, 68,-4633,  Canyon of the Lost,   88,    90
+           Plasmatic Gouge,Cave,  411, 40,-5166,  Canyon of the Lost,   89,    70
+         Chiseler's Cavern,Cave,  622, 31,-4695,  Canyon of the Lost,   89,    65
+          Nest &amp; Bones,Cave, 1467, 46,-5559,Lower Molten Heights,   90,    60
+             The Warehouse,Cave,-1847, 41,-2641,              Corkus,   90,   180
+             Corkus Quarry,Cave,-1365, 93,-2736,              Corkus,   90,   120
+              Pirate Sloop,Cave,-1341, 35,-2229,              Corkus,   90,    60
+            Pirate Lattice,Cave,-1394, 66,-2393,              Corkus,   90,   180
+       Builder-Bot Central,Cave,-1674, 52,-3060,              Corkus,   90,   180
+                  Junk Pit,Cave,-1782, 64,-2569,              Corkus,   90,   150
+                  Geodesic,Cave,-1369,121,-3060,              Corkus,   90,   300
+              Shadow Altar,Cave, 1271, 95,-5427,Lower Molten Heights,   92,   100
+            Azer Athenaeum,Cave, 1511, 48,-5176,Lower Molten Heights,   92,   120
+           Scarred Ingress,Cave, 1264,148,-4647,         Sky Islands,   93,    90
+              Dragon Delta,Cave, 1259, 47,-5343,Lower Molten Heights,   93,   240
+           Cryovern Covert,Cave, 1526, 67,-5427,    Freezing Heights,   94,   140
+            Scorched Earth,Cave, 1603,154,-5069,Upper Molten Heights,   94,    90
+            Azurite Island,Cave,  953,148,-4761,         Sky Islands,   94,   120
+      Forgotten Excavation,Cave,  987, 67,-4977,         Sky Islands,   95,    60
+           Lamprophis Lair,Cave, 1054, 46,-4961,         Sky Islands,   95,    90
+                Sky Shroom,Cave, 1199,108,-4289,         Sky Islands,   95,    90
+                Steamworks,Cave,-1471, 63,-2376,              Corkus,   95,   180
+                The Donjon,Cave,  900, 97,-4408,         Sky Islands,   95,   180
+            Dragonkin Nest,Cave, 1464,172,-5529,Upper Molten Heights,   95,   180
+              Cave of Doom,Cave, 1405, 28,-5067,Lower Molten Heights,   95,   150
+         Mycolite Mountain,Cave, 1015,103,-4358,         Sky Islands,   96,   110
+          Overgrown Rubble,Cave,  742, 87,-4890,         Sky Islands,   96,   150
+         Windwalker Temple,Cave, 1358,121,-4745,         Sky Islands,   96,    45
+               Ovine Spire,Cave,  778, 81,-4721,         Sky Islands,   96,   150
+               Angel Falls,Cave, 1026,109,-4697,         Sky Islands,   97,   180
+      Avos Animation Totem,Cave,-1759, 37,-2450,              Corkus,   98,   180
+       Aquaculture Aquifer,Cave,-1930, 83,-3325,      Avos Territory,  100,   120
+          Eyeball Gauntlet,Cave, 1088,137, -345,      Eyeball Forest,  100,   270
+               The Gwanari,Cave,  983, 75, -470,      Eyeball Forest,  100,    90
+         Spiteful Crossing,Cave,  854, 81, -668,      Eyeball Forest,  100,    90
+            Statue Opening,Cave,  826, 79, -429,      Eyeball Forest,  100,   120
+       The Place Condensed,Cave, 1038, 84, -692,      Eyeball Forest,  100,   120
+                 Haze Cave,Cave,  948, 93,-1049,        Toxic Wastes,  100,   150
+            Loot Symposium,Cave,  775,153, -950,        Toxic Wastes,  100,   110
+       The Place Coalesced,Cave,  879, 79, -803,        Toxic Wastes,  100,   120
+           Caged Creatures,Cave, 1134,135,-1121,         Void Valley,  100,   120
+The Lantern Keeper's Abode,Cave, 1285,103,-1060,         Void Valley,  100,   120
+   The Place Conglomerated,Cave, 1313,144,-1048,         Void Valley,  100,   120
+              Blind Burrow,Cave, 1393,163,-1055,         Void Valley,  100,   100
+
