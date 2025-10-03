@@ -515,9 +515,9 @@ def main():
     wg = WaypointGraph(wp, bps=bps, fast_travel=ft, slash_kill=sk,
                        scrolls=sc, cycle=cy, cache_file_template=cf)
     # find shortest route between caves from levels 72 to 80
-    caves72_80 = (72 <= wp.Level) & (wp.Level <= 80) & (wp.Cave == 1)
-    # print(wg.find_route_between(caves72_80))
-    # takes about 250s
+    caves72_80 = wp.query('72 <= Level <= 80 and Cave').index
+    print(wg.find_route_between(caves72_80))
+    # takes about 250s first time/10s if loading from the cache file
     # expected total distance 4958
 
 

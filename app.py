@@ -1,4 +1,5 @@
-from dash import Dash, html, dcc, dash_table, callback, Output, Input, State
+from dash import (Dash, html, dcc, callback,
+                  Output, Input, State, ALL)
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
@@ -12,19 +13,16 @@ from PIL import Image
 from msgspec import msgpack
 from itertools import pairwise
 from time import perf_counter
-import os, io, psutil
+import os, io, psutil, gc
 
 from lootrun_route_finder import *
-
-
-t = perf_counter()
 
 
 process = psutil.Process()
 
 def memory_usage():
     size = process.memory_info().rss
-    for prefix in [''] + list(np.array(list('KMGTPEZ')) + 'i'):
+    for prefix in [''] + [u + 'i' for u in 'KMGTPEZ']:
         if size < 1024:
             print(f'Memory usage: {size:.1f}{prefix}B')
             return
@@ -32,13 +30,13 @@ def memory_usage():
     print(f'Memory usage: {size:.1f}YiB')
 
 
-def enc_hook(obj):
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    raise NotImplementedError(f'Encoding objects of type {type(obj)} is unsupported')
+# def enc_hook(obj):
+#     if isinstance(obj, np.ndarray):
+#         return obj.tolist()
+#     raise NotImplementedError(f'Encoding objects of type {type(obj)} is unsupported')
 
-encoder = msgpack.Encoder(enc_hook=enc_hook)
-decoder = msgpack.Decoder()
+# encoder = msgpack.Encoder(enc_hook=enc_hook)
+# decoder = msgpack.Decoder()
 
 
 wp = pd.read_csv('assets/waypoints.csv', skipinitialspace=True)
@@ -48,7 +46,7 @@ fig = go.Figure(layout_template='plotly_dark',
                 layout_margin=dict(l=20, r=20, t=20, b=20),
                 layout_dragmode='pan',
                 layout_legend=dict(x=0.01, y=0.01))
-img = Image.open('assets/TopographicMap.png')
+img = Image.open('map/TopographicMap.png')
 fig.add_layout_image(name='map', source=img, layer='below',
                      xref='x', yref='y', x=-2392, y=-6607,
                      sizex=img.size[0], sizey=img.size[1],
@@ -75,8 +73,6 @@ fig.add_trace(go.Scatter(
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
 app.layout = dbc.Row([
-    dcc.Store(id='figure'),
-
     dbc.Col(dcc.Graph(figure=fig, id='graph', className='wynncraft-map',
                       config={'scrollZoom': True, 'displayModeBar': False})),
     dbc.Col(
@@ -85,14 +81,16 @@ app.layout = dbc.Row([
                 dbc.Col(
                     dbc.InputGroup([
                         dbc.InputGroupText('query'),
-                        dbc.Input(type='text', id='query-input',
+                        dbc.Input(type='text', id={'type': 'query-input',
+                                                   'index': 'query'},
                                   placeholder='e.g. "72 <= Level <= 80 and Cave"'),
                         ]),
                     ),
                 dbc.Col(
                     dbc.InputGroup([
                         dbc.InputGroupText('start at'),
-                        dbc.Input(type='text', id='start-at-input',
+                        dbc.Input(type='text', id={'type': 'query-input',
+                                                   'index': 'start-at'},
                                   placeholder='Name',
                                   list='suggested-names'),
                         html.Datalist(id='suggested-names'),
@@ -123,7 +121,8 @@ app.layout = dbc.Row([
                         dbc.InputGroupText('scrolls'),
                         dbc.Input(type='number', min=0, max=3, step=1,
                                   value=3,
-                                  id='scrolls-input'),
+                                  id={'type': 'parameter-input',
+                                      'index': 'scrolls'}),
                         ],
                         style={'width': 125},
                         ),
@@ -134,7 +133,8 @@ app.layout = dbc.Row([
                         dbc.InputGroupText('bps'),
                         dbc.Input(type='number', min=0,
                                   value=18,
-                                  id='bps-input'),
+                                  id={'type': 'parameter-input',
+                                      'index': 'bps'}),
                         ]),
                     width=2,
                     ),
@@ -165,74 +165,69 @@ app.layout = dbc.Row([
 
 @callback(
         Output('table-container', 'children'),
-        Output('query-input', 'invalid'),
-        Input('query-input', 'value'),
+        Output({'type': ALL, 'index': 'query'}, 'invalid'),
+        Input({'type': ALL, 'index': 'query'}, 'value'),
         State('table-container', 'children'))
 def update_query(query, table):
     try:
-        queried_wp = wp.query(query)
+        queried_wp = wp.query(query[0])
     except ValueError:
         queried_wp = wp
-    except (SyntaxError, KeyError, NotImplementedError, TokenError,
-            UndefinedVariableError):
-        return table, True
+    except Exception:
+        return table, [True]
     if isinstance(queried_wp, pd.Series):
         queried_wp = queried_wp.to_frame().T
     return (dbc.Table.from_dataframe(queried_wp, striped=True, bordered=True,
                                     hover=True, color='dark'),
-            False)
+            [False])
 
 
 @callback(
         Output('suggested-names', 'children'),
-        Output('start-at-input', 'invalid'),
-        Input('start-at-input', 'value'),
+        Output({'type': ALL, 'index': 'start-at'}, 'invalid'),
+        Input({'type': ALL, 'index': 'start-at'}, 'value'),
         prevent_initial_call=True)
 def suggest_name(name):
-    if not name:
-        return [], False
-    suggestions = [html.Option(value=n) for n in wp['Name'] if n.startswith(name)]
-    if 1 == len(suggestions) and name == suggestions[0].value:
-        return [], False
-    return suggestions, len(suggestions) == 0
+    if not name[0]:
+        return [], [False]
+    suggestions = [html.Option(value=n) for n in wp['Name']
+                   if n.startswith(name[0])]
+    if 1 == len(suggestions) and name[0] == suggestions[0].value:
+        return [], [False]
+    return suggestions, [len(suggestions) == 0]
 
 
 @callback(
         Output('find-route-button', 'disabled'),
         Input('parameter-checklist', 'value'),
-        Input('scrolls-input', 'value'),
-        Input('bps-input', 'value'),
+        Input({'type': 'parameter-input', 'index': ALL}, 'value'),
         runnint=[(Output('find-route-button', 'disabled'), True, False)])
-def update_parameters(toggles, scrolls, bps):
+def update_parameters(toggles, values):
     global wg
     ft = wg.FAST_TRAVEL in toggles
     sk = wg.SLASH_KILL in toggles
     cy = 'cycle' in toggles
-    bps = bps
-    scrolls = scrolls
+    scrolls, bps = values
     wg.update(fast_travel=ft, slash_kill=sk, cycle=cy, bps=bps, scrolls=scrolls)
     return False
 
 
 @callback(
-        output=Output('graph', 'figure'),
-        inputs=[
-            Input('find-route-button', 'n_clicks'),
-            (State('query-input', 'value'), State('query-input', 'invalid')),
-            (State('start-at-input', 'value'), State('start-at-input', 'invalid'))],
+        Output('graph', 'figure'),
+        Input('find-route-button', 'n_clicks'),
+        State({'type': 'query-input', 'index': ALL}, 'value'),
+        State({'type': 'query-input', 'index': ALL}, 'invalid'),
         prevent_initial_call=True,
         running=[
             (Output('find-route-button', 'disabled'), True, False),
-            (Output('find-route-button', 'children'), 'Computing Route', 'Find Route')])
-def find_route(_, query, start):
-    query, invalid = query
-    if invalid:
+            (Output('find-route-button', 'children'), 'Computing Route',
+                                                      'Find Route')])
+def find_route(_, values, invalids):
+    if any(invalids):
         raise PreventUpdate
-    query = wp.query(query).index
 
-    start, invalid = start
-    if invalid:
-        raise PreventUpdate
+    query, start = values
+    query = wp.query(query).index
     start = wp.query('Name == @start').index[0] if start else None
 
     order, distance = wg.find_route_between(query, start)
@@ -269,15 +264,21 @@ def find_route(_, query, start):
         trace.marker.size = line['marker.size']
         trace.hovertext = line['hovertext']
 
+    fig.data[4].x = order['X']
+    fig.data[4].y = order['Z']
+    fig.data[4].customdata = order['Y']
+    fig.data[4].text = order['Name']
+
     memory_usage()
 
     return fig
 
 
-print(f'Initializing app took {perf_counter() - t:.3f}s')
-memory_usage()
-t = perf_counter()
-
-
 if __name__ == '__main__':
-    app.run(debug=False, jupyter_mode='external')
+    print('Restarted app')
+    memory_usage()
+
+    import sys
+    flag, *_ = sys.argv
+    debug = flag in ['-d', '--debug']
+    app.run(debug=debug, jupyter_mode='external')
